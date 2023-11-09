@@ -9,17 +9,15 @@ namespace CarRental.Common.Interfaces
 {
     public interface IBooking
     {
-        public int Id { get; init; }
-        //public string RegNumber { get; init; }
-        public string CustomerName { get; init; }
-        public int OdometerRented { get; init; }
+        public bool BookingIsClosed { get; set; }
+        public int Id { get; init; }        
+        public int CustomerId { get; init; }
+        public int VehicleId { get; set; }
         public DateTime Rented { get; init; }
-        public int OdometerReturned { get; set; }        
         public DateTime Returned { get; set; }
-        //public double TotalCost { get; set; }
-        //public VehicleStatues Status { get; set; }
-        public string GetRegNumber();
-        public string GetVehicleStatues();
-        public double TotalCost();
+        public int OdometerRented { get; init; }
+        public int OdometerReturned { get; set; }
+        public double TotalCost { get; set; }
+        
     }
 }

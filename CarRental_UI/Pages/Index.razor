@@ -1,9 +1,294 @@
 ﻿@page "/"
+@using CarRental.Business.Classes
+@using CarRental.Common.Classes
+@using CarRental.Common.Enums
+@using CarRental.Common.Interfaces
+@using CarRental.Common.Extensions
+@inject BookingProcessor bookingProcess;
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Car Rental System</h1>
 
-Welcome to your new app.
+@{
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    
+
+
+}
+<!-- Show error -->
+@if(errorMessage != "")
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+<h3>Vehicles</h3>
+<br />
+<!-- Vehicles -->
+<div class="row my-3">
+    <div><!-- old form-->
+        <div disabled=@IsDisabled> <!-- old fieldset-->
+            <table id="1" style="width: 100%"st class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width:12%">RegNo</th>
+                        <th >Make</th>
+                        <th >Vehicle type</th>
+                        <th style="width:10%">Odometer</th>
+                        <th style="width:10%">Cost Km</th>
+                        <th style="width:10%">Kr Day</th>
+                        <th >Action</th>
+                        <th >Staus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Input row-->
+                    <tr>
+                        <th>
+                            <input @bind="regNo" class="form-control" placeholder="Reg number"/>
+                        </th>
+                        <th>
+                            <select @bind="make" class="form-control">
+                                <option selected>Select</option>
+                                @foreach (string name in bookingProcess.ManufacturerNames)
+                                {
+                                    <option value="@name">@name</option>
+                                }
+                            </select>
+                        </th>
+                        <th>
+                            <select @bind="type" class="form-control">
+                                <option selected>Select</option>
+                                @foreach (string name in bookingProcess.VehicleTypeNames)
+                                {
+                                    <option value="@name">@name</option>
+                                }
+                            </select>
+                        </th>
+                        <th>
+                            <input @bind="odometer" class="form-control" placeholder="0" />
+                        </th>
+                        <th>
+                            <input @bind="costKm" class="form-control" placeholder="0" />
+                        </th>
+                        <th>
+                            <input @bind="costDay" class="form-control" placeholder="0" />                            
+                        </th>
+                        <th>
+                            <button class="btn btn-primary" @onclick="() => AddVehicle(make, regNo, odometer, costKm, costDay, type)">Add</button>
+                        </th>
+                        <th>Status</th>
+                    </tr>
+                    <!-- Vehicle Rows-->
+                    @foreach (IVehicle row in _vehicles)
+                    {
+                        <tr>
+                            <th>@row.RegNumber</th>
+                            <td>@row.Make</td>
+                            <td>@row.Type</td>
+                            <td>@row.Odometer</td>
+                            <td>@row.CostPerKm</td>
+                            <td>@row.CostPerDay</td>
+                            @if (row.Status == VehicleStatus.Available)
+                            {
+                                <th>
+                                    <select @bind="customerId" class="form-control">
+                                        <option selected>Who rents?</option>
+                                        @foreach (Customer person in _customers)
+                                        {
+                                            <option value="@person.Id">@person.GetName()</option>
+                                        }
+                                    </select>
+                                    <button class="btn btn-success" @onclick="async () => await Rent(customerId, row.VehicleId)">Rent</button>
+                                </th>
+                                <td>
+                                    <button type="button" class="btn btn-dark" style="pointer-events:none">Availabel</button>
+                                </td>
+                            }
+                            else
+                            {
+                                <td>
+                                    <input @bind="distance" class="form-control" placeholder="Ex 10" />
+                                    <button class="btn btn-primary" @onclick="() => Return(row.VehicleId, distance)">Return</button>
+                                </td>
+                                <td>
+                                    <div class="btn btn-danger active" style="cursor:default;">Booked</div>
+                                </td>
+                            }                           
+                           
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>        
+    </div>
+</div>
+
+
+<h3>Bookings</h3>
+<br />
+<!-- Table Bookings-->
+<table class="table table-bordered my-3">
+    <thead>
+        <tr>
+            <th scope="col">RegNo</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Km Rented</th>
+            <th scope="col">Km Returned</th>
+            <th scope="col">Rented</th>
+            <th scope="col">Returned</th>
+            <th scope="col">Cost</th>
+            <th scope="col">Staus</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <button class="btn btn-primary">MyAdd</button>
+            </td>
+        </tr>
+        @foreach (Booking row in _bookings)              // make Booking work!!!
+        {
+            <tr>
+                <td>@bookingProcess.GetRegNumber(row.VehicleId, out infoMessage)</td>
+                <td>@bookingProcess.GetFullName(row.CustomerId, out infoMessage)</td>
+                <td>@row.OdometerRented</td>
+                <td>@(row.OdometerReturned == 0 ? null : row.OdometerReturned)</td>
+                <td>@row.RentDateToString()</td>
+                <td>@row.ReturnDateToString()</td>
+                <td>@row.TotalCost</td>
+                <td>
+                    @if (row.BookingIsClosed)
+                    {
+                        <div class="btn btn-static">Closed</div>
+                    }
+                    else
+                    {
+                        <div class="btn btn-static btn-booked">Open</div>
+                    }
+                </td>
+            </tr>
+        }
+        
+    </tbody>
+</table>
+
+<h3>Customers</h3>
+<br />
+<!-- Table Persons-->
+<table class="table table-bordered mt-3 mb-5">
+    <thead>
+        <tr>
+            <th scope="col">Person Number</th>
+            <th scope="col">Name</th>
+            <th scope="col">Status</th>
+        </tr>
+    </thead>
+    <tbody>        
+        @foreach (Customer row in _customers)
+        {
+            <tr>
+                <th scope="row">@row.PersNumber</th>
+                <td>@row.GetName()</td>
+                <td>
+                    <button class="btn btn-success">Available</button>
+                </td>
+            </tr>
+        }
+        <tr>
+            <th scope="row">3 ways to create unclickable buttons</th>
+            <td>
+                <div class="btn btn-dark active" style="cursor:default;">State</div>
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger" style="pointer-events:none">Closed</button>
+            </td>
+            <td>
+                <div class="btn btn-static">Global CSS</div>
+                
+            </td>
+        </tr>
+    </tbody>
+</table>
+<!-- check error message -->
+<!-- Show error -->
+@if (@infoMessage != "")
+{
+    <div class="alert alert-info" role="alert">
+        @infoMessage
+    </div>
+}
+
+@code{
+    List<IPerson> _customers = new();
+
+    List<IVehicle> _vehicles = new();
+    List<IBooking> _bookings = new();
+    System.Diagnostics.Stopwatch wt = new();
+    // input Vehicle
+    string? regNo = null, make = null, type = null;
+    double? costKm = 0.0, costDay = 0.0;
+    int? odometer = 0, distance = 0;
+
+    // Customers
+    int customerId = 0;
+
+    // Application fields
+    protected bool IsDisabled { get; set; }
+    string errorMessage = null, infoMessage = "";
+
+    protected override async void OnInitialized()
+    {
+        UpdateData();
+        errorMessage = bookingProcess.ErrorMessage ?? "";
+        IsDisabled = false;
+    }
+
+    void UpdateData()
+    {
+        _customers = bookingProcess.GeneralGetAll<IPerson>().ToList();
+        _vehicles = bookingProcess.GeneralGetAll<IVehicle>().ToList();
+        _bookings = bookingProcess.GeneralGetAll<IBooking>().ToList();
+        errorMessage += bookingProcess.ErrorMessage == "" ? "" : $"\n{bookingProcess.ErrorMessage}";
+        // Get single Test
+        //var person = bookingProcess.GeneralGetSingle<IPerson>(p => p.Id == 1);
+        //var car = bookingProcess.GeneralGetSingle<IVehicle>(p => p.VehicleId == 1);
+        //var book = bookingProcess.GeneralGetSingle<IBooking>(p => p.Id == 1);
+
+    }
+    void AddVehicle(string make, string regNum, int? odometer, double? costKm, double? costDay, string type)
+    {
+        // Add
+        bookingProcess.AddVehicle(make, regNum, odometer, costKm, costDay, type);
+        // Get possible 1st error
+        errorMessage = bookingProcess.ErrorMessage;
+
+        //get Vehicles from DataLayer
+        UpdateData();
+
+    }
+    async Task Rent(int customerId, int vehicleId) 
+    {
+        // Add Booking
+        await bookingProcess.RentVehicle(customerId, vehicleId);
+        errorMessage = bookingProcess.ErrorMessage;
+
+        //Update
+        UpdateData();
+
+    }
+    void Return(int vehicleId, int? distance)
+    {
+        // Return
+        bookingProcess.ReturnVehicle(vehicleId, distance);
+        errorMessage = bookingProcess.ErrorMessage;
+
+        UpdateData();
+    }
+    
+
+   
+}

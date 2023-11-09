@@ -36,7 +36,7 @@ main {
         text-overflow: ellipsis;
     }
 
-@media (max-width: 640.98px) {
+@media (max-width: 440.98px) {
     .top-row:not(.auth) {
         display: none;
     }
@@ -47,6 +47,9 @@ main {
 
     .top-row ::deep a, .top-row ::deep .btn-link {
         margin-left: 0;
+    }
+    .sidebar{
+        width: 200px
     }
 }
 

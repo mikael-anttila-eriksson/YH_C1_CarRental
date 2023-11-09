@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CarRental.Common.Enums
 {
-    public enum Manufacturers
+    public enum Manufacturer
     {
         Unknown,
         Volvo,
