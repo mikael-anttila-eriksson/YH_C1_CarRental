@@ -57,8 +57,8 @@ public class BookingProcessor
     {
         ResetErrorMessage();
 
-        // Make a mock-process -> Delay x seconds
-        //await Task.Delay(8000);
+        // Make a mock-process -> Delay 8 seconds
+        await Task.Delay(8000);
 
         // Chek input
         try
@@ -92,7 +92,7 @@ public class BookingProcessor
         _db.GenericAdd(booking, out _errorMsg);
         return;         
     }
-    public void ReturnVehicle(int vehicleId, int? distance)                        // forts mer Return
+    public void ReturnVehicle(int vehicleId, int? distance)                     
     {
         // Is there a Booking for this vehicle?
         string gg = "jer";
@@ -116,8 +116,8 @@ public class BookingProcessor
             // close booking
             // Get Vehicle
             IVehicle vehicle = GeneralGetSingle<IVehicle>(p => p.VehicleId == booking.VehicleId);
-            // Change vehicle parameters
-             
+
+            // Change vehicle parameters             
             vehicle.Odometer += distance is null ? 0 : (int)distance;
             vehicle.Status = VehicleStatus.Available;
 
@@ -177,6 +177,22 @@ public class BookingProcessor
             _errorMsg = "Input was not correct";
         }        
     }
+    public void AddIPerson(string persNr, string name, string lastName)
+    {
+        // check input
+        bool numberOk = CheckPersonNumber(persNr);
+        bool nameOk = (!string.IsNullOrEmpty(name) || !string.IsNullOrEmpty(lastName));
+        if(numberOk && numberOk)
+        {
+            // Add person
+            IPerson newPerson = new Customer(_db.NextPersonId, persNr, name, lastName);
+            _db.GenericAdd(newPerson, out _errorMsg);
+        }
+        else
+        {
+            _errorMsg = "Person detail was not correct";
+        }
+    }
     #endregion Add
     // **************************************************************
     #region Get Enums
@@ -186,10 +202,13 @@ public class BookingProcessor
     #endregion Get Enums
     // **************************************************************
     #region Checks
-    //public IPerson? GetPerson(int id)
-    //{
-    //    return 
-    //}
+    private bool CheckPersonNumber(string persNr)
+    {
+        if (string.IsNullOrEmpty(persNr)) return false;
+        if (persNr.Length != 12) return false;
+        if (!persNr.All(Char.IsDigit)) return false;
+        return true;
+    }
     /// <summary>
     /// Check that the number inputs are not null and above zero.
     /// </summary>
@@ -224,7 +243,6 @@ public class BookingProcessor
         if (!regNr.Substring(3, 3).All(Char.IsDigit)) return false;
         
         return true;
-
     }
     private bool CheckManufacturer(string make, out Manufacturer manufacturer)
     {

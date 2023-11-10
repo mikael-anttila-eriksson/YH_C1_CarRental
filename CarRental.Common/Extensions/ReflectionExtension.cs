@@ -23,6 +23,14 @@ public static class ReflectionExtension
         => field.GetValue(container)
         ?? throw new InvalidDataException();
 
+    /// <summary>
+    /// This created some problem when casting as IQueryable. 
+    /// Worked better with AsQueryable. Dont know why?
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidDataException"></exception>
     public static IQueryable<T> ToQueryable<T>(this object? data) where T : class
         => data is not null && data is List<T>
         ? (IQueryable<T>)data

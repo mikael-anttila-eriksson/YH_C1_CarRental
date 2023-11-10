@@ -11,6 +11,12 @@ html, body {
     cursor: default;
     border-radius: 20px 20px;
 }
+.btn-process {
+    background-color: magenta;
+    border: 3px solid pink;
+    cursor: progress;
+    border-radius: 30px 20px;
+}
 /*-moz & -webkit are old experimental features, could possibly leave them out?!?
     box-shadow is the one that is displayed
 */

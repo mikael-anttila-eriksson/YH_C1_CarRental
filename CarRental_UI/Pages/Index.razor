@@ -29,7 +29,7 @@
 <!-- Vehicles -->
 <div class="row my-3">
     <div><!-- old form-->
-        <div disabled=@IsDisabled> <!-- old fieldset-->
+        <fieldset disabled=@IsDisabled> <!-- old fieldset-->
             <table id="1" style="width: 100%"st class="table table-bordered">
                 <thead>
                     <tr>
@@ -71,15 +71,20 @@
                             <input @bind="odometer" class="form-control" placeholder="0" />
                         </th>
                         <th>
-                            <input @bind="costKm" class="form-control" placeholder="0" />
+                            <input @bind="costPerKm" class="form-control" placeholder="0" />
                         </th>
                         <th>
-                            <input @bind="costDay" class="form-control" placeholder="0" />                            
+                            <input @bind="costPerDay" class="form-control" placeholder="0" />                            
                         </th>
                         <th>
-                            <button class="btn btn-primary" @onclick="() => AddVehicle(make, regNo, odometer, costKm, costDay, type)">Add</button>
+                            <button class="btn btn-primary" @onclick="() => AddVehicle(make, regNo, odometer, costPerKm, costPerDay, type)">Add</button>
                         </th>
-                        <th>Status</th>
+                        @if(IsDisabled)
+                        {
+                            <th>
+                                <button class="btn btn-process">Processing &#9202;</button>    
+                            </th>                        
+                        }                        
                     </tr>
                     <!-- Vehicle Rows-->
                     @foreach (IVehicle row in _vehicles)
@@ -116,14 +121,12 @@
                                 <td>
                                     <div class="btn btn-danger active" style="cursor:default;">Booked</div>
                                 </td>
-                            }                           
-                           
+                            }   
                         </tr>
                     }
-
                 </tbody>
             </table>
-        </div>        
+        </fieldset>        
     </div>
 </div>
 
@@ -134,23 +137,18 @@
 <table class="table table-bordered my-3">
     <thead>
         <tr>
-            <th scope="col">RegNo</th>
-            <th scope="col">Customer</th>
-            <th scope="col">Km Rented</th>
-            <th scope="col">Km Returned</th>
-            <th scope="col">Rented</th>
-            <th scope="col">Returned</th>
-            <th scope="col">Cost</th>
-            <th scope="col">Staus</th>
+            <th>RegNo</th>
+            <th>Customer</th>
+            <th>Km Rented</th>
+            <th>Km Returned</th>
+            <th>Rented</th>
+            <th>Returned</th>
+            <th>Cost &yen;</th>
+            <th>Staus</th>
         </tr>
     </thead>
-    <tbody>
-        <tr>
-            <td>
-                <button class="btn btn-primary">MyAdd</button>
-            </td>
-        </tr>
-        @foreach (Booking row in _bookings)              // make Booking work!!!
+    <tbody>        
+        @foreach (Booking row in _bookings)             
         {
             <tr>
                 <td>@bookingProcess.GetRegNumber(row.VehicleId, out infoMessage)</td>
@@ -182,39 +180,38 @@
 <table class="table table-bordered mt-3 mb-5">
     <thead>
         <tr>
-            <th scope="col">Person Number</th>
-            <th scope="col">Name</th>
-            <th scope="col">Status</th>
+            <th>Person Number</th>
+            <th>Name</th>
+            <th>Status</th>
         </tr>
     </thead>
-    <tbody>        
+    <tbody>   
+        <tr>
+            <th>
+                <input @bind="peronsNumber" class="form-control" placeholder="yyyymmddnnnn"/>
+            </th>
+            <th>
+                <input @bind="firstName" class="form-control" placeholder="name" />
+                <input @bind="lastName" class="form-control" placeholder="surename"/>                               
+            </th>
+            <th>
+                <button class="btn-outline-success" @onclick="() => AddPerson(peronsNumber, firstName, lastName)">Add</button>
+            </th>
+        </tr>
         @foreach (Customer row in _customers)
         {
             <tr>
-                <th scope="row">@row.PersNumber</th>
+                <th>@row.PersNumber</th>
                 <td>@row.GetName()</td>
                 <td>
-                    <button class="btn btn-success">Available</button>
+                    <div class="btn btn-static">&#x2713; Verified</div>
                 </td>
             </tr>
-        }
-        <tr>
-            <th scope="row">3 ways to create unclickable buttons</th>
-            <td>
-                <div class="btn btn-dark active" style="cursor:default;">State</div>
-            </td>
-            <td>
-                <button type="button" class="btn btn-danger" style="pointer-events:none">Closed</button>
-            </td>
-            <td>
-                <div class="btn btn-static">Global CSS</div>
-                
-            </td>
-        </tr>
+        }        
     </tbody>
 </table>
-<!-- check error message -->
-<!-- Show error -->
+<!-- check info message -->
+<!-- Show info on problems loading booking result -->
 @if (@infoMessage != "")
 {
     <div class="alert alert-info" role="alert">
@@ -224,17 +221,16 @@
 
 @code{
     List<IPerson> _customers = new();
-
     List<IVehicle> _vehicles = new();
     List<IBooking> _bookings = new();
-    System.Diagnostics.Stopwatch wt = new();
     // input Vehicle
     string? regNo = null, make = null, type = null;
-    double? costKm = 0.0, costDay = 0.0;
+    double? costPerKm = 0.0, costPerDay = 0.0;
     int? odometer = 0, distance = 0;
 
     // Customers
     int customerId = 0;
+    string firstName = null, lastName = null, peronsNumber = null;
 
     // Application fields
     protected bool IsDisabled { get; set; }
@@ -253,27 +249,38 @@
         _vehicles = bookingProcess.GeneralGetAll<IVehicle>().ToList();
         _bookings = bookingProcess.GeneralGetAll<IBooking>().ToList();
         errorMessage += bookingProcess.ErrorMessage == "" ? "" : $"\n{bookingProcess.ErrorMessage}";
-        // Get single Test
-        //var person = bookingProcess.GeneralGetSingle<IPerson>(p => p.Id == 1);
-        //var car = bookingProcess.GeneralGetSingle<IVehicle>(p => p.VehicleId == 1);
-        //var book = bookingProcess.GeneralGetSingle<IBooking>(p => p.Id == 1);
-
     }
-    void AddVehicle(string make, string regNum, int? odometer, double? costKm, double? costDay, string type)
+
+    void AddVehicle(string make, string regNum, int? inOdometer, double? costKm, double? costDay, string type)
     {
         // Add
-        bookingProcess.AddVehicle(make, regNum, odometer, costKm, costDay, type);
-        // Get possible 1st error
+        bookingProcess.AddVehicle(make, regNum, inOdometer, costKm, costDay, type);
+        regNo = "";
+        odometer = 0;
+        costPerKm = 0;
+        costPerDay = 0;
+        // Get possible error
         errorMessage = bookingProcess.ErrorMessage;
 
-        //get Vehicles from DataLayer
+        //Update
         UpdateData();
 
+    }
+    void AddPerson(string persNr, string name, string surname)
+    {
+        bookingProcess.AddIPerson(persNr, name, surname);
+        peronsNumber = "";
+        firstName = "";
+        lastName = "";
+        errorMessage = bookingProcess.ErrorMessage;
+        UpdateData();
     }
     async Task Rent(int customerId, int vehicleId) 
     {
         // Add Booking
+        IsDisabled = true;
         await bookingProcess.RentVehicle(customerId, vehicleId);
+        IsDisabled = false;
         errorMessage = bookingProcess.ErrorMessage;
 
         //Update
@@ -285,10 +292,8 @@
         // Return
         bookingProcess.ReturnVehicle(vehicleId, distance);
         errorMessage = bookingProcess.ErrorMessage;
-
         UpdateData();
     }
-    
 
    
 }

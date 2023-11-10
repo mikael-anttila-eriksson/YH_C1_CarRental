@@ -36,10 +36,10 @@ public class CollectionData : IData
         _vehicles.Add(new Motorcycle(NextVehicleId, "GOO999", 5980, 5, 370, Manufacturer.Yamaha));
         _vehicles.Add(new Motorcycle(NextVehicleId, "JAP238", 450, 6.6, 550, Manufacturer.Kawasaki));
 
-        // Rented
+        // Booking - Rented
         _bookings.Add(new Booking(NextBookingId, _vehicles[0].VehicleId, _persons[2].Id, new DateTime(2023, 10, 4), _vehicles[0].Odometer));
         _vehicles[0].Status = VehicleStatus.Booked;
-        // Returned
+        // Booking - Returned
         _bookings.Add(new Booking(NextBookingId, _vehicles[3].VehicleId, _persons[1].Id, new DateTime(2023, 10, 8), _vehicles[3].Odometer));
         _vehicles[3].Status = VehicleStatus.Available;
         _vehicles[3].Odometer += 45;
@@ -47,14 +47,14 @@ public class CollectionData : IData
         _bookings[1].Returned = DateTime.Now;
         _bookings[1].OdometerReturned = _vehicles[3].Odometer;
         _bookings[1].TotalCost = 220.55;
-        //_bookings.Add(new Booking(NextBookingId, _vehicles[2].VehicleId, _persons[4].Id, new DateTime(2023, 10, 15), 33));
-        //_bookings.Add(new Booking(NextBookingId, _vehicles[3].VehicleId, _persons[3].Id, new DateTime(2023, 10, 16), 33));
-        //_bookings.Add(new Booking(NextBookingId, _vehicles[4].VehicleId, _persons[0].Id, new DateTime(2023, 10, 20), 33));
+
     }
 
     // --------- Ska ha EN Add<T> och EN Get<T>, En Single<T>, som funkar för Alla Typer!!! -------------
     // **************************************************************
     #region Generic Add & Get
+    // **************************************************************
+    #region Generic troubleShoot
     public IEnumerable<T> GenericGet3<T>(Func<T, bool>? expression, out string errorMsg) where T : class // klar testa med customer !!!!
     {
         errorMsg = "";
@@ -116,6 +116,8 @@ public class CollectionData : IData
 
         return list;
     }
+    #endregion Generic troubleShoot
+    // **************************************************************
     public IEnumerable<T> GenericGet<T>(Func<T, bool>? expression, out string errorMsg) where T : class
     {        
         try
